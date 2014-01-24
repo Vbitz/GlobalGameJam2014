@@ -1,0 +1,3 @@
+define(["../entity"], function (Entity) {
+
+});
