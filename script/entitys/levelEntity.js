@@ -1,5 +1,12 @@
-define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, BasicLevelTiles, LevelTile) {
+define([
+		"util",
+		"../entity",
+		"../level/basicTiles",
+		"../level/tile",
+		"../level/tileEntity"
+	], function (util, Entity, BasicLevelTiles, LevelTile, LevelTileEntity) {
 	var LevelEntity = function () {
+		var self = this;
 		Entity.call(this);
 
 		this._levelEntitys = {};
@@ -7,8 +14,19 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 		this._level = [];
 		this.levelWidth = 0;
 		this.levelHeight = 0;
+		this._tileEntitys = new LevelTileEntity.LevelTileEntityManager(this);
 
 		this.generate();
+
+		this.on("level.addTileEntity", function (e) {
+			util.assert(e.ent !== undefined);
+			self.addTileEntity(e.ent);
+		});
+
+		this.on("level.callTileMethod", function (e) {
+			util.assert(e.evntName !== undefined);
+			self.callTileMethod(e.evntName, e.args);
+		});
 	};
 
 	LevelEntity.prototype = Object.create(Entity.prototype);
@@ -37,6 +55,18 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 		}
 	};
 
+	LevelEntity.prototype.addTileEntity = function(te) {
+		this._tileEntitys.addTileEntity(te);
+	};
+
+	LevelEntity.prototype.callTileMethod = function (evntName, args) {
+		this._tileEntitys.emit(evntName, args);
+	};
+
+	LevelEntity.prototype.checkColision = function(x, y) {
+		return false;
+	};
+
 	LevelEntity.prototype.generate = function () {
 		this.createLevel(64, 64);
 		this.addRect("stoneFloor", 0, 0, 64, 64);
@@ -59,6 +89,8 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 				LevelTile.render(this._level[x][y], x, y, draw);
 			}
 		}
+
+		this._tileEntitys.renderAll(draw);
 	};
 
 	return LevelEntity;

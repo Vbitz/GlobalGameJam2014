@@ -19,7 +19,7 @@ define(["util"], function (util) {
 		var self = this;
 		if (this._events[evntName] !== undefined) {
 			this._events[evntName].forEach(function (ev) {
-				ev.call(this, msg);
+				ev.call(self, msg);
 			});
 		}
 	};
