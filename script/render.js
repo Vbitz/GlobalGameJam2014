@@ -18,7 +18,11 @@ define(["entity", "renderer"], function (Entity, Renderer) {
 	}
 
 	RenderManager.prototype.bindTo = function (ele) {
+		var self = this;
 		this._canvas = ele;
+		document.body.addEventListener("keydown", function (e) {
+			self.emit("keydown", {event: e});
+		}, true);
 		this._context = this._canvas.getContext("2d");
 	};
 

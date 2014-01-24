@@ -61,10 +61,15 @@ define(["../util", "./tile"], function (util, LevelTile) {
 		}
 	};
 
-	LevelTileEntity.prototype.move = function(x, y) {
-		// TODO: Check colision
-		this._x += x;
-		this._y += y;
+	LevelTileEntity.prototype.interact = function (x, y, msg) {
+		this._manager.getLevel().interact(this, x, y, msg);
+	};
+
+	LevelTileEntity.prototype.move = function (x, y) {
+		if (!this._manager.getLevel().checkColision(this._x + x, this._y + y)) {
+			this._x += x;
+			this._y += y;	
+		}
 	};
 
 	LevelTileEntity.prototype.bind = function (manager) {

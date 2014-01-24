@@ -15,8 +15,14 @@ define(["util"], function (util) {
 		draw.cameraRestore();
 	};
 
+	LevelTile.prototype.interact = function (x, y, lvl, src, msg) { };
+
 	LevelTile.prototype.setColides = function (colides) {
 		this._colides = colides;
+	};
+
+	LevelTile.prototype.setRenderFunc = function (render) {
+		this._renderFunc = render;
 	};
 
 	LevelTile.register = function (name, tile) {
@@ -29,6 +35,14 @@ define(["util"], function (util) {
 		t._renderFunc = drawFunc;
 		t.setColides(colides);
 		LevelTile.register(name, t);
+	};
+
+	LevelTile.checkColision = function (name) {
+		return levelTiles[name]._colides;
+	};
+
+	LevelTile.interact = function (name, x, y, lvl, src, msg) {
+		levelTiles[name].interact(x, y, lvl, src, msg);
 	};
 
 	LevelTile.render = function (name, x, y, draw) {

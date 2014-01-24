@@ -2,9 +2,10 @@ define([
 		"util",
 		"../entity",
 		"../level/basicTiles",
+		"../level/activeTiles",
 		"../level/tile",
 		"../level/tileEntity"
-	], function (util, Entity, BasicLevelTiles, LevelTile, LevelTileEntity) {
+	], function (util, Entity, BasicLevelTiles, ActiveLevelTiles, LevelTile, LevelTileEntity) {
 	var LevelEntity = function () {
 		var self = this;
 		Entity.call(this);
@@ -26,6 +27,10 @@ define([
 		this.on("level.callTileMethod", function (e) {
 			util.assert(e.evntName !== undefined);
 			self.callTileMethod(e.evntName, e.args);
+		});
+
+		this.on("keydown", function (e) {
+			self.callTileMethod("keydown", e);
 		});
 	};
 
@@ -64,7 +69,13 @@ define([
 	};
 
 	LevelEntity.prototype.checkColision = function(x, y) {
-		return false;
+		if (x < 0 || x > this.levelWidth) return true;
+		if (y < 0 || y > this.levelHeight) return true;
+		return LevelTile.checkColision(this._level[x][y]);
+	};
+
+	LevelEntity.prototype.interact = function (src, x, y, msg) {
+		LevelTile.interact(this._level[x][y], x, y, this, src, msg);
 	};
 
 	LevelEntity.prototype.generate = function () {
@@ -76,7 +87,9 @@ define([
 		this.addRect("stoneWall", 1, this.levelHeight - 1, this.levelWidth - 2, 1);
 		for (var x = 0; x < 64; x++) {
 			for (var y = 0; y < 64; y++) {
-				if (Math.random() > 0.8) {
+				if (Math.random() > 0.9) {
+					this.setTile("tileDoorClosed", x, y);
+				} else if (Math.random() > 0.7) {
 					this.setTile("stoneWall", x, y);
 				}
 			}
