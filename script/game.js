@@ -1,15 +1,20 @@
 require([
 		"util",
 		"render",
-		"entitys/levelEntity"
-	], function (util, RenderManager, LevelEntity) {
+		"entitys/levelEntity",
+		"entitys/trollCatEntity"
+	], function (util, RenderManager, LevelEntity, TrollCatEntity) {
 	var renderManager = new RenderManager();
-	var canvas = document.querySelector("#gameCanvas");
-	util.assert(canvas);
+	var canvas = util.assert(document.querySelector("#gameCanvas"));
+
 	renderManager.bindTo(canvas);
-	renderManager.setSize();
+	renderManager.setSize(800, 600);
 	renderManager.addEntity(new LevelEntity());
-	renderManager.start(function (dt, renderer) {
-		renderManager.renderAll(renderer);
+	renderManager.addEntity(new TrollCatEntity());
+	
+	renderManager.start(function (dt, draw) {
+		draw.clear();
+		draw.cameraReset();
+		renderManager.renderAll();
 	});
 });
