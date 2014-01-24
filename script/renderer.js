@@ -67,7 +67,9 @@ define([], function () {
 	};
 
 	Renderer.prototype.draw = function (img, x, y, w, h) {
-		throw new Error("Not Implamented");
+		var realImg = img.get();
+		if (realImg === null) return;
+		this._ctx.drawImage(realImg, x, y, w, h);
 	};
 
 	Renderer.prototype.drawSub = function (img, x, y, w, h, xSub, ySub, wSub, hSub) {
@@ -92,6 +94,14 @@ define([], function () {
 
 	Renderer.prototype.cameraRotate = function (a) {
 		this._ctx.rotate(a);
+	};
+
+	Renderer.prototype.cameraSave = function () {
+		this._ctx.save();
+	};
+
+	Renderer.prototype.cameraRestore = function () {
+		this._ctx.restore();
 	};
 
 	return Renderer;

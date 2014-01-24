@@ -52,5 +52,9 @@ define(["entity", "renderer"], function (Entity, Renderer) {
 		this._entitys.renderAll(1000 / 60, this.getRenderer());
 	};
 
+	RenderManager.prototype.emit = function (evntName, args) {
+		this._entitys.emit("", evntName, args);
+	};
+
 	return RenderManager;
 });

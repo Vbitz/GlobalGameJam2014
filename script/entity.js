@@ -4,6 +4,7 @@ define(["util"], function (util) {
 		this._manager = null;
 		this._parentLayer = null;
 		this._uuid = util.uuid();
+		this._events = {};
 	}
 
 	Entity.prototype.bind = function (layer) {
@@ -12,16 +13,28 @@ define(["util"], function (util) {
 		this._manager = layer.getManager();
 	};
 
-	Entity.prototype.render = function (dt, renderer) {
-		
+	Entity.prototype.render = function (dt, draw) { };
+
+	Entity.prototype.recieve = function (evntName, msg) {
+		var self = this;
+		if (this._events[evntName] !== undefined) {
+			this._events[evntName].forEach(function (ev) {
+				ev.call(this, msg);
+			});
+		}
 	};
 
 	Entity.prototype.emit = function (evntName, msg) {
+		this.recieve(evntName, msg);
 		this._parentLayer.emit(this._uuid, evntName, msg);
 	};
 
 	Entity.prototype.on = function (evntName, cb) {
-		if (this._m)
+		if (this._events[evntName] === undefined) {
+			this._events[evntName] = [cb];
+		} else {
+			this._events[evntName].push(cb);
+		}
 	};
 
 	Entity.prototype.getManager = function () {
@@ -31,6 +44,7 @@ define(["util"], function (util) {
 	function EntityManagerLayer (manager) {
 		this._entitys = [];
 		this._manager = manager;
+		this._uuid = util.uuid();
 	}
 
 	EntityManagerLayer.prototype.addEntity = function (ent) {
@@ -48,8 +62,19 @@ define(["util"], function (util) {
 		});
 	};
 
-	EntityManagerLayer.prototype.emit = function (src, evntName, msg) {
+	EntityManagerLayer.prototype.recieve = function (evntName, msg) {
+		this._entitys.forEach(function (ent) {
+			ent.recieve(evntName, msg);
+		});
+	};
 
+	EntityManagerLayer.prototype.emit = function (src, evntName, msg) {
+		this._manager.emit(this._uuid, evntName, msg);
+		this._entitys.forEach(function (ent) {
+			if (ent._uuid !== src) {
+				ent.recieve(evntName, msg);
+			}
+		});
 	};
 
 	function EntityManager () {
@@ -64,6 +89,15 @@ define(["util"], function (util) {
 	EntityManager.prototype.addEntity = function (ent, layer) {
 		layer = layer ? layer : 0;
 		this._layers[layer].addEntity(ent);
+	};
+
+	EntityManager.prototype.emit = function (src, evntName, msg) {
+		for (var i in this._layers) {
+			var layer = this._layers[i];
+			if (layer._uuid !== src) {
+				layer.recieve(evntName, msg);
+			}
+		}
 	};
 
 	EntityManager.prototype.renderAll = function (dt, renderer) {

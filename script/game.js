@@ -11,6 +11,14 @@ require([
 	renderManager.setSize(800, 600);
 	renderManager.addEntity(new LevelEntity());
 	renderManager.addEntity(new TrollCatEntity());
+
+	//function randomCats() {
+	//	if (Math.random() > 0.5) {
+	//		renderManager.emit("addCat", {});
+	//	}
+	//	setTimeout(randomCats, 100);
+	//}
+	//randomCats();
 	
 	renderManager.start(function (dt, draw) {
 		draw.clear();

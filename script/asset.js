@@ -1,18 +1,39 @@
 define([], function () {
-	function AssetManager () {
+	var _assets = {};
 
-	}
-
-	var _singilton = null;
-
-	AssetManager.preCache = function (path) {
-		
+	function Asset (path, type) {
+		this._path = path;
+		this._type = type;
 	};
 
-	function getSingilton() {
-		if (_singilton === null) _singilton = new AssetManager();
-		return _singilton;
-	}
+	Asset.prototype.get = function() {
+		if (_assets[this._path] === undefined) {
+			return null;
+		} else {
+			return _assets[this._path];
+		}
+	};
+	
+	var _singilton = null;
+
+	var AssetManager = {};
+
+	AssetManager.preCache = function (path, type) {
+		if (type === "img") {
+			var imgObj = new Image();
+			imgObj.onload = function () {
+				_assets[path] = this;
+			};
+			imgObj.src = path;
+		}
+	};
+
+	AssetManager.getImage = function (path) {
+		if (_assets[path] === undefined) {
+			AssetManager.preCache(path, "img");
+		}
+		return new Asset(path, "img");
+	};
 
 	return AssetManager;
 });
