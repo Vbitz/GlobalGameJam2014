@@ -25,10 +25,14 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 		}
 	};
 
+	LevelEntity.prototype.setTile = function (t, x, y) {
+		this._level[x][y] = t;
+	};
+
 	LevelEntity.prototype.addRect = function (t, x, y, w, h) {
 		for (var x1 = x; x1 < (x + w); x1++) {
 			for (var y1 = y; y1 < (y + h); y1++) {
-				this._level[x1][y1] = t;
+				this.setTile(t, x1, y1);
 			}
 		}
 	};
@@ -40,6 +44,13 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 		this.addRect("stoneWall", this.levelWidth - 1, 0, 1, this.levelHeight);
 		this.addRect("stoneWall", 1, 0, this.levelWidth - 2, 1);
 		this.addRect("stoneWall", 1, this.levelHeight - 1, this.levelWidth - 2, 1);
+		for (var x = 0; x < 64; x++) {
+			for (var y = 0; y < 64; y++) {
+				if (Math.random() > 0.8) {
+					this.setTile("stoneWall", x, y);
+				}
+			}
+		}
 	};
 
 	LevelEntity.prototype.render = function (dt, draw) {

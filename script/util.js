@@ -22,5 +22,13 @@ define([], function () {
 		else return b;
 	};
 
+	util.getWidth = function () {
+		return window.innerWidth;
+	}
+
+	util.getHeight = function () {
+		return window.innerHeight;
+	}
+
 	return util;
 });

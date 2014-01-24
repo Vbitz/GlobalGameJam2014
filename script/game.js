@@ -12,7 +12,7 @@ require([
 	var canvas = util.assert(document.querySelector("#gameCanvas"));
 
 	renderManager.bindTo(canvas);
-	renderManager.setSize(800, 600);
+	renderManager.setSize(window.innerWidth, window.innerHeight);
 	renderManager.addEntity(new LevelEntity());
 	renderManager.addEntity(new TrollCatEntity());
 

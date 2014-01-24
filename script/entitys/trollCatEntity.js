@@ -41,7 +41,7 @@ define(["util", "entity", "../asset"], function (util, Entity, AssetManager) {
 		this._cats[catID] = cat;
 		function updateCat () {
 			cat.x += CAT_SPEED;
-			if (cat.x > 900) {
+			if (cat.x > util.getWidth()) {
 				self.removeCat(catID);
 			} else {
 				setTimeout(updateCat, 1000 / 60);
