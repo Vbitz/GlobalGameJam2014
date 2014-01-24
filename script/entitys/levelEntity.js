@@ -15,6 +15,8 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 
 	LevelEntity.prototype.createLevel = function (w, h) {
 		this._level = [];
+		this.levelWidth = w;
+		this.levelHeight = h;
 		for (var x = 0; x < w; x++) {
 			this._level[x] = [];
 			for (var y = 0; y < h; y++) {
@@ -24,8 +26,8 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 	};
 
 	LevelEntity.prototype.addRect = function (t, x, y, w, h) {
-		for (var x1 = x; x1 < (x + w); x++) {
-			for (var y1 = y; y1 < (y + h); y++) {
+		for (var x1 = x; x1 < (x + w); x1++) {
+			for (var y1 = y; y1 < (y + h); y1++) {
 				this._level[x1][y1] = t;
 			}
 		}
@@ -33,6 +35,7 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 
 	LevelEntity.prototype.generate = function () {
 		this.createLevel(64, 64);
+		this.addRect("stoneFloor", 0, 0, 64, 64);
 		this.addRect("stoneWall", 0, 0, 1, this.levelHeight);
 		this.addRect("stoneWall", this.levelWidth - 1, 0, 1, this.levelHeight);
 		this.addRect("stoneWall", 1, 0, this.levelWidth - 2, 1);
@@ -40,10 +43,9 @@ define(["../entity", "../level/basicTiles", "../level/tile"], function (Entity, 
 	};
 
 	LevelEntity.prototype.render = function (dt, draw) {
-		console.log("rendering");
 		for (var x = 0; x < this.levelWidth; x++) {
 			for (var y = 0; y < this.levelHeight; y++) {
-				LevelTiles.render(this._level[x][y], x, y, draw);
+				LevelTile.render(this._level[x][y], x, y, draw);
 			}
 		}
 	};

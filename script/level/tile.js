@@ -6,11 +6,11 @@ define(["util"], function (util) {
 		this._colides = false;
 	};
 
-	LevelTile.SIZE = 32;
+	LevelTile.SIZE = 64;
 
 	LevelTile.prototype.render = function (draw, x, y) {
 		draw.cameraSave();
-		draw.cameraTranslate(x, y);
+		draw.cameraPan(x * LevelTile.SIZE, y * LevelTile.SIZE);
 		this._renderFunc(draw);
 		draw.cameraRestore();
 	};
@@ -24,6 +24,7 @@ define(["util"], function (util) {
 	};
 
 	LevelTile.registerBasic = function (name, colides, drawFunc) {
+		console.log("Registering: " + name);
 		var t = new LevelTile();
 		t._renderFunc = drawFunc;
 		t.setColides(colides);
@@ -31,7 +32,6 @@ define(["util"], function (util) {
 	};
 
 	LevelTile.render = function (name, x, y, draw) {
-		util.assert(levelTiles[name] !== undefined);
 		levelTiles[name].render(draw, x, y);
 	};
 

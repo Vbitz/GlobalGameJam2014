@@ -1,14 +1,14 @@
 define(["../util", "./tile"], function (util, LevelTile) {
-	var stoneWallColors = ["#101010", "#151515", "#252525", "#1b1b1b"],
-		stoneFloorColors = ["#404040", "#454545", "#555555", "#4b4b4b"];
+	var stoneWallColors = ["#101010", "#252515", "#052525", "#1b1b1b"],
+		stoneFloorColors = ["#808880", "#859585", "#898a8a", "#8b8b89"];
 
 	function genTile (x, y, color) {
 		return {
-			x: x + util.rand(0, 4),
-			y: y + util.rand(0, 4),
-			w: util.rand(6, 8),
-			h: util.rand(6, 8),
-			color: stoneWallColors[util.rand(1, 4)]
+			x: x + util.rand(2, 8),
+			y: y + util.rand(2, 8),
+			w: util.rand(12, 16),
+			h: util.rand(12, 16),
+			color: color[util.rand(1, 4)]
 		};
 	}
 
@@ -16,9 +16,9 @@ define(["../util", "./tile"], function (util, LevelTile) {
 		if (this._tiles === undefined) {
 			this._tiles = [];
 			this._tiles.push(genTile(0, 0, stoneWallColors));
-			this._tiles.push(genTile(16, 0, stoneWallColors));
-			this._tiles.push(genTile(0, 16, stoneWallColors));
-			this._tiles.push(genTile(16, 16, stoneWallColors));
+			this._tiles.push(genTile(32, 0, stoneWallColors));
+			this._tiles.push(genTile(0, 32, stoneWallColors));
+			this._tiles.push(genTile(32, 32, stoneWallColors));
 		}
 		draw.setColor(stoneWallColors[0]);
 		draw.rect(0, 0, LevelTile.SIZE, LevelTile.SIZE);
@@ -32,9 +32,9 @@ define(["../util", "./tile"], function (util, LevelTile) {
 		if (this._tiles === undefined) {
 			this._tiles = [];
 			this._tiles.push(genTile(0, 0, stoneFloorColors));
-			this._tiles.push(genTile(16, 0, stoneFloorColors));
-			this._tiles.push(genTile(0, 16, stoneFloorColors));
-			this._tiles.push(genTile(16, 16, stoneFloorColors));
+			this._tiles.push(genTile(32, 0, stoneFloorColors));
+			this._tiles.push(genTile(0, 32, stoneFloorColors));
+			this._tiles.push(genTile(32, 32, stoneFloorColors));
 		}
 		draw.setColor(stoneFloorColors[0]);
 		draw.rect(0, 0, LevelTile.SIZE, LevelTile.SIZE);

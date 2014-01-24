@@ -1,3 +1,7 @@
+require.config({
+    urlArgs: "bust=" + (new Date()).getTime()
+});
+
 require([
 		"util",
 		"render",
@@ -12,13 +16,13 @@ require([
 	renderManager.addEntity(new LevelEntity());
 	renderManager.addEntity(new TrollCatEntity());
 
-	//function randomCats() {
-	//	if (Math.random() > 0.5) {
-	//		renderManager.emit("addCat", {});
-	//	}
-	//	setTimeout(randomCats, 100);
-	//}
-	//randomCats();
+	function randomCats() {
+		if (Math.random() > 0.95) {
+			renderManager.emit("addCat", {});
+		}
+		setTimeout(randomCats, 2000);
+	}
+	randomCats();
 	
 	renderManager.start(function (dt, draw) {
 		draw.clear();
