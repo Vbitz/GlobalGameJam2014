@@ -20,21 +20,41 @@
 	canvas {
 		border: 1px solid black;
 	}
+
+	.treasure_text {
+		color: #aabb00;
+		font-style: italic;
+	}
+
+	.exit_text {
+		color: #ff00ff;
+		font-style: italic;
+	}
 	</style>
 </head>
 <body>
-	<h1>Laughing Octo Wookie <small>By: Team Dancing Octo Tentacle</h1>
+	<h1>Laughing Octo Wookie <small>By: Team Dancing Octo Tentacle</small></h1>
 	<p><strong>WSAD</strong> to move and <strong>E</strong> to switch characters</p>
+	<p>Collect all the <span class="treasure_text">treasure</span> and proceed to the <span class="exit_text">exit</span></p>
 	<canvas id="maze"></canvas>
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript">
 	// TODO LIST
-	// - Blue player should be able to see red walls and vice versa, only when there next to the element
+	// - Blue player should be able to see red walls and vice versa, make the change very subtle and highlight it with the other charactors color
+	// - Wall elements should be visible to the other player subtily
+	// - Give more encouragement for swtiching between the charactors early on
+	// - Once a player goes though a wall highlight it for them to find it again
+	// - Decrese the downtime ingame by adding a fast travel mechanic
+	// - Time how fast the players runs though the game and keep a list of high scores
+	// - Create a much smaller level showing the mechanics for the end presentaition
+	// - People seem to want to hop skotch between the charactors, the level should apper differently to the 2 players or I could use that intent
 
 		var TILE_WALL = 0,
 			TILE_FLOOR = 1,
 			TILE_TREASURE = 2,
+			TILE_END = 3,
 			TILE_INVISABLE = 10,
+			TILE_GHOST = 11;
 			TILE_RED_WALL = 20,
 			TILE_BLUE_WALL = 30;
 
@@ -43,7 +63,8 @@
 			2: TILE_BLUE_WALL,
 			3: TILE_WALL,
 			4: TILE_FLOOR,
-			5: TILE_TREASURE
+			5: TILE_TREASURE,
+			6: TILE_END
 		};
 
 		var tileSize = 16;
@@ -107,6 +128,8 @@
 		function reveal(x, y) {
 			if (x < 0 || x > levelWidth) return;
 			if (y < 0 || y > levelHeight) return;
+			if (levelVisibleBlue[x][y] === TILE_INVISABLE) levelVisibleBlue[x][y] = TILE_GHOST;
+			if (levelVisibleRed[x][y] === TILE_INVISABLE) levelVisibleRed[x][y] = TILE_GHOST;
 			switch (currentPlayer) {
 				case BLUE_PLAYER: levelVisibleBlue[x][y] = level[x][y]; break;
 				case RED_PLAYER: levelVisibleRed[x][y] = level[x][y]; break;
@@ -154,9 +177,9 @@
 				levelVisibleRed[x] = [];
 				levelVisibleBlue[x] = [];
 				for (var y = 0; y < h; y++) {
-					if (level[x][y] === TILE_TREASURE) {
-						levelVisibleRed[x][y] = TILE_TREASURE;
-						levelVisibleBlue[x][y] = TILE_TREASURE;
+					if (level[x][y] === TILE_TREASURE || level[x][y] === TILE_END) {
+						levelVisibleRed[x][y] = level[x][y];
+						levelVisibleBlue[x][y] = level[x][y];
 					} else {
 						levelVisibleRed[x][y] = TILE_INVISABLE;
 						levelVisibleBlue[x][y] = TILE_INVISABLE;
@@ -187,7 +210,9 @@
 						case TILE_RED_WALL:
 						case TILE_WALL:		ctx.fillStyle = "#101010"; break;
 						case TILE_FLOOR:	ctx.fillStyle = "#dadada"; break;
+						case TILE_GHOST:	ctx.fillStyle = "#eaeaea"; break;
 						case TILE_TREASURE: ctx.fillStyle = "#aabb00"; break;
+						case TILE_END:		ctx.fillStyle = "#ff00ff"; break;
 					}
 					ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
 				}
