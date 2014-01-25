@@ -44,29 +44,17 @@ define(["util", "../tileEntity", "../../players/player"], function (util, LevelT
 
 	PlayerEntity.prototype.handleKeyPress = function(code) {
 		if (code === 87) {
-			if (this.playerDirection === UP) {
-				this.move(0, -1);
-			} else {
-				this.playerDirection = UP;
-			}
+			this.move(0, -1);
+			this.playerDirection = UP;
 		} else if (code === 83) {
-			if (this.playerDirection === DOWN) {
-				this.move(0, 1);
-			} else {
-				this.playerDirection = DOWN;
-			}
+			this.move(0, 1);
+			this.playerDirection = DOWN;
 		} else if (code === 65) {
-			if (this.playerDirection === LEFT) {
-				this.move(-1, 0);
-			} else {
-				this.playerDirection = LEFT;
-			}
+			this.move(-1, 0);
+			this.playerDirection = LEFT;
 		} else if (code === 68) {
-			if (this.playerDirection === RIGHT) {
-				this.move(1, 0);
-			} else {
-				this.playerDirection = RIGHT;
-			}
+			this.move(1, 0);
+			this.playerDirection = RIGHT;
 		} else if (code === 69) {
 			this.handleInteract();
 		}
@@ -81,7 +69,7 @@ define(["util", "../tileEntity", "../../players/player"], function (util, LevelT
 		case LEFT: x--; break;
 		case RIGHT: x++; break;
 		};
-		this.interact(x, y, {type: "eInteract"});
+		this.interact(x, y, {type: "e"});
 	};
 
 	return PlayerEntity;

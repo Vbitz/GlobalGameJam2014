@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Global Game Jam Game Prototype</title>
+	<style type="text/css">
+	body {
+		font-family: sans-serif;
+		font-weight: lighter;
+	}
+
+	h1 {
+		text-decoration: underline;
+	}
+	</style>
+</head>
+<body>
+	<h1>Global Game Jam Game Prototype<small>By: Team Dancing-Octo-Tenticle</h1>
+	<p><strong>WSAD</strong> to move and <strong>E</strong> to switch charactors</p>
+	<canvas id="maze"></canvas>
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript">
+		var TILE_WALL = 0,
+			TILE_FLOOR = 1,
+			TILE_INVISABLE = 10,
+			TILE_RED_WALL = 20,
+			TILE_BLUE_WALL = 30;
+
+		var tileTypes = {
+			1: TILE_RED_WALL,
+			2: TILE_BLUE_WALL,
+			3: TILE_WALL,
+			4: TILE_FLOOR
+		};
+
+		var tileSize = 16;
+
+		var level = [],
+			levelWidth = 0,
+			levelHeight = 0;
+
+		var BLUE_PLAYER = 0,
+			RED_PLAYER = 1;
+
+		var currentPlayer = BLUE_PLAYER
+
+		var bluePlayerPos = [0, 1],
+			redPlayerPos = [0, 1];
+
+		var ctx = null;
+
+		function switchPlayers () {
+			switch (currentPlayer) {
+			case BLUE_PLAYER:
+				currentPlayer = RED_PLAYER;
+				break;
+			case RED_PLAYER:
+				currentPlayer = BLUE_PLAYER;
+				break; 
+			}
+			renderLevel(ctx);
+		}
+
+		function getPlayerPos () {
+			switch (currentPlayer) {
+				case BLUE_PLAYER: return bluePlayerPos;
+				case RED_PLAYER: return redPlayerPos;
+			}
+		}
+
+		function getPlayerWall () {
+			switch (currentPlayer) {
+				case BLUE_PLAYER: return TILE_BLUE_WALL;
+				case RED_PLAYER: return TILE_RED_WALL;
+			}
+		}
+
+		function checkColision(x, y) {
+			if (x < 0 || x > levelWidth) return true;
+			if (y < 0 || y > levelHeight) return true;
+			console.log(level[x][y] === TILE_WALL);
+			return level[x][y] === TILE_WALL || level[x][y] === getPlayerWall();
+		}
+
+		function reveal(x, y) {
+			if (x < 0 || x > levelWidth) return;
+			if (y < 0 || y > levelHeight) return;
+			level_visible[x][y] = level[x][y];
+		}
+
+		function revealPlayer() {
+			var playerPos = getPlayerPos();
+			
+			var playerX = playerPos[0],
+				playerY = playerPos[1];
+			
+			reveal(playerX    , playerY    );
+
+			reveal(playerX - 1, playerY - 0);
+			reveal(playerX + 1, playerY - 0);
+			reveal(playerX - 0, playerY - 1);
+			reveal(playerX - 0, playerY + 1);
+
+			reveal(playerX - 1, playerY - 1);
+			reveal(playerX - 1, playerY + 1);
+			reveal(playerX + 1, playerY - 1);
+			reveal(playerX + 1, playerY + 1);
+		}
+
+		function createMap(ctx, w, h, rawTiles) {
+			var i = 0;
+			level = [];
+			level_visible = [];
+			levelWidth = w;
+			levelHeight = h;
+			
+			for (var x = 0; x < w; x++) {
+				level[x] = [];
+				level_visible[x] = [];
+				for (var y = 0; y < h; y++) {
+					level_visible[x][y] = TILE_INVISABLE;
+				}
+			}
+
+			for (var y = 0; y < h; y++) {
+				for (var x = 0; x < w; x++) {
+					level[x][y] = tileTypes[rawTiles[i++]];
+				}
+			}
+
+			ctx.canvas.width = levelWidth * tileSize;
+			ctx.canvas.height = levelHeight * tileSize;
+		}
+
+		function drawPlayer(ctx, player) {
+			switch (player) {
+				case RED_PLAYER: ctx.fillStyle = "#ff0000"; playerPos = redPlayerPos; break;
+				case BLUE_PLAYER: ctx.fillStyle = "#0000ff"; playerPos = bluePlayerPos; break;
+			}
+			ctx.fillRect(playerPos[0] * tileSize + 2, playerPos[1] * tileSize + 2, tileSize - 4, tileSize - 4);
+		}
+
+		function renderLevel(ctx) {
+			ctx.clearRect(0, 0, levelWidth * tileSize, levelHeight * tileSize);
+			for (var x = 0; x < levelWidth; x++) {
+				for (var y = 0; y < levelHeight; y++) {
+					var tType = level_visible[x][y];
+					if (tType === TILE_INVISABLE) continue;
+					switch (tType) {
+						case TILE_BLUE_WALL:
+						case TILE_RED_WALL:
+						case TILE_WALL:		ctx.fillStyle = "#101010"; break;
+						case TILE_FLOOR:	ctx.fillStyle = "#dadada"; break;
+					}
+					ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+				}
+			}
+			if (currentPlayer === BLUE_PLAYER) {
+				drawPlayer(ctx, RED_PLAYER);
+				drawPlayer(ctx, BLUE_PLAYER);
+			} else if (currentPlayer === RED_PLAYER) {
+				drawPlayer(ctx, BLUE_PLAYER);
+				drawPlayer(ctx, RED_PLAYER);
+			}
+		}
+
+		function movePlayer(xOff, yOff) {
+			var playerPos = getPlayerPos();
+			console.log(playerPos, xOff, yOff);
+			if (!checkColision(playerPos[0] + xOff, playerPos[1] + yOff)) {
+				playerPos[0] += xOff;
+				playerPos[1] += yOff;
+				switch (currentPlayer) {
+					case BLUE_PLAYER:
+						bluePlayerPos = playerPos;
+						break;
+					case RED_PLAYER:
+						redPlayerPos = playerPos;
+						break;
+				}
+				revealPlayer();
+				renderLevel(ctx);
+			}
+		}
+
+		$(document).ready(function () {
+			var can = $("#maze")[0];
+			ctx = can.getContext("2d");
+			$(document).keydown(function (e) {
+				var code = e.keyCode;
+				if (code === 87) {			// W
+					movePlayer(0, -1);
+				} else if (code === 83) {	// S
+					movePlayer(0, 1);
+				} else if (code === 65) {	// A
+					movePlayer(-1, 0);
+				} else if (code === 68) {	// D
+					movePlayer(1, 0);
+				} else if (code === 69) {	// E
+					switchPlayers();
+				}
+			});
+			$.getJSON("map.json", function (obj) {
+				createMap(ctx, obj.width, obj.height, obj.layers[0].data);
+				revealPlayer();
+				renderLevel(ctx);
+			});
+		});
+	</script>
+</body>
+</html>
