@@ -28,8 +28,12 @@
 	<canvas id="maze"></canvas>
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript">
+	// TODO LIST
+	// - Blue player should be able to see red walls and vice versa, only when there next to the element
+
 		var TILE_WALL = 0,
 			TILE_FLOOR = 1,
+			TILE_TREASURE = 2,
 			TILE_INVISABLE = 10,
 			TILE_RED_WALL = 20,
 			TILE_BLUE_WALL = 30;
@@ -38,12 +42,15 @@
 			1: TILE_RED_WALL,
 			2: TILE_BLUE_WALL,
 			3: TILE_WALL,
-			4: TILE_FLOOR
+			4: TILE_FLOOR,
+			5: TILE_TREASURE
 		};
 
 		var tileSize = 16;
 
-		var level = [],
+		var level = []
+			levelVisibleBlue = [],
+			levelVisibleRed = [],
 			levelWidth = 0,
 			levelHeight = 0;
 
@@ -66,6 +73,7 @@
 				currentPlayer = BLUE_PLAYER;
 				break; 
 			}
+			revealPlayer();
 			renderLevel(ctx);
 		}
 
@@ -83,17 +91,26 @@
 			}
 		}
 
+		function getPlayerVisibleSet() {
+			switch (currentPlayer) {
+				case BLUE_PLAYER: return levelVisibleBlue;
+				case RED_PLAYER: return levelVisibleRed;
+			}
+		}
+
 		function checkColision(x, y) {
 			if (x < 0 || x > levelWidth) return true;
 			if (y < 0 || y > levelHeight) return true;
-			console.log(level[x][y] === TILE_WALL);
 			return level[x][y] === TILE_WALL || level[x][y] === getPlayerWall();
 		}
 
 		function reveal(x, y) {
 			if (x < 0 || x > levelWidth) return;
 			if (y < 0 || y > levelHeight) return;
-			level_visible[x][y] = level[x][y];
+			switch (currentPlayer) {
+				case BLUE_PLAYER: levelVisibleBlue[x][y] = level[x][y]; break;
+				case RED_PLAYER: levelVisibleRed[x][y] = level[x][y]; break;
+			};
 		}
 
 		function revealPlayer() {
@@ -118,21 +135,32 @@
 		function createMap(ctx, w, h, rawTiles) {
 			var i = 0;
 			level = [];
-			level_visible = [];
+			levelVisibleRed = [];
+			levelVisibleBlue = [];
 			levelWidth = w;
 			levelHeight = h;
 			
 			for (var x = 0; x < w; x++) {
 				level[x] = [];
-				level_visible[x] = [];
-				for (var y = 0; y < h; y++) {
-					level_visible[x][y] = TILE_INVISABLE;
-				}
 			}
 
 			for (var y = 0; y < h; y++) {
 				for (var x = 0; x < w; x++) {
 					level[x][y] = tileTypes[rawTiles[i++]];
+				}
+			}
+
+			for (var x = 0; x < w; x++) {
+				levelVisibleRed[x] = [];
+				levelVisibleBlue[x] = [];
+				for (var y = 0; y < h; y++) {
+					if (level[x][y] === TILE_TREASURE) {
+						levelVisibleRed[x][y] = TILE_TREASURE;
+						levelVisibleBlue[x][y] = TILE_TREASURE;
+					} else {
+						levelVisibleRed[x][y] = TILE_INVISABLE;
+						levelVisibleBlue[x][y] = TILE_INVISABLE;
+					}
 				}
 			}
 
@@ -152,13 +180,14 @@
 			ctx.clearRect(0, 0, levelWidth * tileSize, levelHeight * tileSize);
 			for (var x = 0; x < levelWidth; x++) {
 				for (var y = 0; y < levelHeight; y++) {
-					var tType = level_visible[x][y];
+					var tType = getPlayerVisibleSet()[x][y];
 					if (tType === TILE_INVISABLE) continue;
 					switch (tType) {
 						case TILE_BLUE_WALL:
 						case TILE_RED_WALL:
 						case TILE_WALL:		ctx.fillStyle = "#101010"; break;
 						case TILE_FLOOR:	ctx.fillStyle = "#dadada"; break;
+						case TILE_TREASURE: ctx.fillStyle = "#aabb00"; break;
 					}
 					ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
 				}
