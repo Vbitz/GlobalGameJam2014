@@ -10,6 +10,7 @@
 
 	h1 {
 		text-decoration: underline;
+		margin: 0;
 	}
 
 	h1 small {
@@ -18,11 +19,15 @@
 	}
 
 	canvas {
+		background-image: url("background.png");
+		background-repeat: repeat;
+		display: inline-block;
 		border: 1px solid black;
+		margin: 10px;
 	}
 
 	.treasure_text {
-		color: #aabb00;
+		color: #ffd700;
 		font-style: italic;
 	}
 
@@ -30,33 +35,73 @@
 		color: #ff00ff;
 		font-style: italic;
 	}
+
+	.timer {
+		font-size: 36px;
+		position: fixed;
+		display: block;
+		top: 10px;
+		right: 10px;
+		margin: 0;
+		text-align: right;
+	}
+
+	.help {
+		display: inline-block;
+		vertical-align: top;
+		margin: 0;
+		padding: 0;
+	}
+
+	.task_complete {
+		color: #aaaaaa;
+		text-decoration: line-through;
+	}
 	</style>
 </head>
 <body>
 	<h1>Laughing Octo Wookie <small>By: Team Dancing Octo Tentacle</small></h1>
-	<p><strong>WSAD</strong> to move and <strong>E</strong> to switch characters</p>
-	<p>Collect all the <span class="treasure_text">treasure</span> and proceed to the <span class="exit_text">exit</span></p>
 	<canvas id="maze"></canvas>
+	<div class="help">
+		<h2>Help</h2>
+		<p><strong>WSAD</strong> to move and <strong>E</strong> to switch characters</p>
+		<p>Collect all the <span class="treasure_text">Treasure</span> and proceed to the <span class="exit_text">Exit</span></p>
+		<p id="timerHelp">The timer on the right starts once you move.</p>
+		<h2>Objectives</h2>
+		<ol>
+		<li id="task1" class="task_complete">Get the Blue <span class="treasure_text">Treasure</span></li>
+		<li id="task2">Get the Red <span class="treasure_text">Treasure</span></li>
+		<li id="task3">Get to the Exit</li>
+		</ol>
+	</div>
+	<h1 class="timer" id="timer">00:00:000</h1>
 	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript" src="moment.min.js"></script>
 	<script type="text/javascript">
 	// TODO LIST
-	// - Blue player should be able to see red walls and vice versa, make the change very subtle and highlight it with the other charactors color
-	// - Wall elements should be visible to the other player subtily
+	// X Blue player should be able to see red walls and vice versa, make the change very subtle and highlight it with the other charactors color
+	// X Wall elements should be visible to the other player subtily
 	// - Give more encouragement for swtiching between the charactors early on
-	// - Once a player goes though a wall highlight it for them to find it again
+	// X Once a player goes though a wall highlight it for them to find it again (I should consider this)
 	// - Decrese the downtime ingame by adding a fast travel mechanic
-	// - Time how fast the players runs though the game and keep a list of high scores
+	// X Time how fast the players runs though the game
 	// - Create a much smaller level showing the mechanics for the end presentaition
-	// - People seem to want to hop skotch between the charactors, the level should apper differently to the 2 players or I could use that intent
+	// - People seem to want to hop skotch between the charactors, the level should apper differently to the 2 players or I could use that inten
+	// - Objectives
+		var startTime = null;
 
 		var TILE_WALL = 0,
 			TILE_FLOOR = 1,
-			TILE_TREASURE = 2,
-			TILE_END = 3,
+			TILE_END = 2,
 			TILE_INVISABLE = 10,
 			TILE_GHOST = 11;
 			TILE_RED_WALL = 20,
-			TILE_BLUE_WALL = 30;
+			TILE_BLUE_WALL = 21,
+			TILE_RED_WALL_VISIBLE = 22,
+			TILE_BLUE_WALL_VISIBLE = 21,
+			TILE_TREASURE_RED = 30,
+			TILE_TREASURE_BLUE = 31,
+			TILE_TREASURE = 32;
 
 		var tileTypes = {
 			1: TILE_RED_WALL,
@@ -64,7 +109,9 @@
 			3: TILE_WALL,
 			4: TILE_FLOOR,
 			5: TILE_TREASURE,
-			6: TILE_END
+			6: TILE_END,
+			7: TILE_TREASURE_BLUE,
+			8: TILE_TREASURE_RED
 		};
 
 		var tileSize = 16;
@@ -78,12 +125,14 @@
 		var BLUE_PLAYER = 0,
 			RED_PLAYER = 1;
 
-		var currentPlayer = BLUE_PLAYER
+		var currentPlayer = BLUE_PLAYER;
 
 		var bluePlayerPos = [0, 1],
 			redPlayerPos = [0, 1];
 
 		var ctx = null;
+
+		var wallSpriteSheet = null;
 
 		function switchPlayers () {
 			switch (currentPlayer) {
@@ -122,17 +171,45 @@
 		function checkColision(x, y) {
 			if (x < 0 || x > levelWidth) return true;
 			if (y < 0 || y > levelHeight) return true;
-			return level[x][y] === TILE_WALL || level[x][y] === getPlayerWall();
+			if (level[x][y] === getPlayerWall()) {
+				console.log("Colide");
+				switch (currentPlayer) {
+					case BLUE_PLAYER: levelVisibleBlue[x][y] = TILE_BLUE_WALL_VISIBLE; break;
+					case RED_PLAYER: levelVisibleRed[x][y] = TILE_RED_WALL_VISIBLE; break;
+				}
+				return false;
+			} else 
+			return level[x][y] === TILE_WALL || level[x][y] === TILE_BLUE_WALL || level[x][y] === TILE_RED_WALL;
 		}
 
 		function reveal(x, y) {
 			if (x < 0 || x > levelWidth) return;
 			if (y < 0 || y > levelHeight) return;
+			switch (currentPlayer) {
+				case BLUE_PLAYER:
+					if (levelVisibleBlue[x][y] !== TILE_INVISABLE
+						&& levelVisibleBlue[x][y] !== TILE_GHOST) return;
+					break;
+				case RED_PLAYER:
+					if (levelVisibleRed[x][y] !== TILE_INVISABLE
+						&& levelVisibleRed[x][y] !== TILE_GHOST) return;
+					break;
+			}
 			if (levelVisibleBlue[x][y] === TILE_INVISABLE) levelVisibleBlue[x][y] = TILE_GHOST;
 			if (levelVisibleRed[x][y] === TILE_INVISABLE) levelVisibleRed[x][y] = TILE_GHOST;
 			switch (currentPlayer) {
-				case BLUE_PLAYER: levelVisibleBlue[x][y] = level[x][y]; break;
-				case RED_PLAYER: levelVisibleRed[x][y] = level[x][y]; break;
+				case BLUE_PLAYER:
+					levelVisibleBlue[x][y] = level[x][y];
+					if (level[x][y] === TILE_RED_WALL) {
+						levelVisibleBlue[x][y] = TILE_RED_WALL_VISIBLE;
+					}
+					break;
+				case RED_PLAYER:
+					levelVisibleRed[x][y] = level[x][y];
+					if (level[x][y] === TILE_BLUE_WALL) {
+						levelVisibleRed[x][y] = TILE_BLUE_WALL_VISIBLE;
+					}
+					break;
 			};
 		}
 
@@ -177,7 +254,10 @@
 				levelVisibleRed[x] = [];
 				levelVisibleBlue[x] = [];
 				for (var y = 0; y < h; y++) {
-					if (level[x][y] === TILE_TREASURE || level[x][y] === TILE_END) {
+					if (level[x][y] === TILE_TREASURE
+					 || level[x][y] === TILE_TREASURE_BLUE
+					 || level[x][y] === TILE_TREASURE_RED
+					 || level[x][y] === TILE_END) {
 						levelVisibleRed[x][y] = level[x][y];
 						levelVisibleBlue[x][y] = level[x][y];
 					} else {
@@ -199,24 +279,69 @@
 			ctx.fillRect(playerPos[0] * tileSize + 2, playerPos[1] * tileSize + 2, tileSize - 4, tileSize - 4);
 		}
 
+		function drawWallTile (ctx, x, y) {
+			switch (currentPlayer) {
+				case BLUE_PLAYER:
+					ctx.drawImage(wallSpriteSheet, tileSize, 0, tileSize, tileSize, x * tileSize, y * tileSize, tileSize, tileSize);
+					break;
+				case RED_PLAYER:
+					ctx.drawImage(wallSpriteSheet, 0, 0, tileSize, tileSize, x * tileSize, y * tileSize, tileSize, tileSize);
+					break;
+			}
+		}
+
 		function renderLevel(ctx) {
 			ctx.clearRect(0, 0, levelWidth * tileSize, levelHeight * tileSize);
+			var shadowTiles = [];
+			var treasureTiles = [];
 			for (var x = 0; x < levelWidth; x++) {
 				for (var y = 0; y < levelHeight; y++) {
 					var tType = getPlayerVisibleSet()[x][y];
-					if (tType === TILE_INVISABLE) continue;
+					var drawWallImage = false;
+					if (tType === TILE_FLOOR) continue;
+					ctx.shadowBlur = 0.0;
+					ctx.shadowColor = "black";
 					switch (tType) {
 						case TILE_BLUE_WALL:
 						case TILE_RED_WALL:
-						case TILE_WALL:		ctx.fillStyle = "#101010"; break;
-						case TILE_FLOOR:	ctx.fillStyle = "#dadada"; break;
-						case TILE_GHOST:	ctx.fillStyle = "#eaeaea"; break;
-						case TILE_TREASURE: ctx.fillStyle = "#aabb00"; break;
-						case TILE_END:		ctx.fillStyle = "#ff00ff"; break;
+						case TILE_WALL:
+							drawWallImage = true;
+							ctx.fillStyle = "#888";
+							break;
+						case TILE_BLUE_WALL_VISIBLE:
+							ctx.fillStyle = "#888";
+							shadowTiles.push({x: x, y: y, color: "#blue"});
+							break;
+						case TILE_RED_WALL_VISIBLE:
+							ctx.fillStyle = "#888";
+							shadowTiles.push({x: x, y: y, color: "red"});
+							break;
+						case TILE_FLOOR:			ctx.fillStyle = "#dadada"; break;
+						case TILE_GHOST:			ctx.fillStyle = "#f0f0f0"; break;
+						case TILE_INVISABLE:		ctx.fillStyle = "#ffffff"; break;
+						case TILE_TREASURE:
+							ctx.fillStyle = "#ffd700";
+							ctx.shadowBlur = 10.0;
+							ctx.shadowColor = "#daa520";
+							break;
+						case TILE_TREASURE_BLUE:
+							ctx.fillStyle = "blue";
+							treasureTiles.push({x: x, y: y, color: "blue"});
+							break;
+						case TILE_TREASURE_RED:
+							ctx.fillStyle = "red";
+							treasureTiles.push({x: x, y: y, color: "red"});
+							break;
+						case TILE_END:				ctx.fillStyle = "#501050"; ctx.shadowBlur = 20.0; break;
 					}
 					ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+					if (drawWallImage) {
+						drawWallTile(ctx, x, y);
+					}
 				}
 			}
+			ctx.shadowBlur = 0.0;
+			ctx.shadowColor = "black";
 			if (currentPlayer === BLUE_PLAYER) {
 				drawPlayer(ctx, RED_PLAYER);
 				drawPlayer(ctx, BLUE_PLAYER);
@@ -224,11 +349,23 @@
 				drawPlayer(ctx, BLUE_PLAYER);
 				drawPlayer(ctx, RED_PLAYER);
 			}
+			
+			ctx.shadowBlur = 5.0;
+			ctx.strokeStyle = "#444";
+			shadowTiles.forEach(function (t) {
+				ctx.shadowColor = t.color;
+				ctx.strokeRect(t.x * tileSize, t.y * tileSize, tileSize, tileSize);
+			});
+			ctx.shadowBlur = 20.0;
+			ctx.strokeStyle = "#fffacd";
+			treasureTiles.forEach(function (t) {
+				ctx.shadowColor = t.color;
+				ctx.strokeRect(t.x * tileSize, t.y * tileSize, tileSize, tileSize);
+			});
 		}
 
 		function movePlayer(xOff, yOff) {
 			var playerPos = getPlayerPos();
-			console.log(playerPos, xOff, yOff);
 			if (!checkColision(playerPos[0] + xOff, playerPos[1] + yOff)) {
 				playerPos[0] += xOff;
 				playerPos[1] += yOff;
@@ -244,11 +381,22 @@
 				renderLevel(ctx);
 			}
 		}
+		function loadImage(url, cb) {
+			var img = new Image();
+			img.onload = function () {
+				cb(img);
+			};
+			img.src = url;
+		}
 
 		$(document).ready(function () {
 			var can = $("#maze")[0];
 			ctx = can.getContext("2d");
 			$(document).keydown(function (e) {
+				if (startTime === null) {
+					startTime = new Date();
+					$("#timerHelp").hide();
+				}
 				var code = e.keyCode;
 				if (code === 87) {			// W
 					movePlayer(0, -1);
@@ -262,11 +410,22 @@
 					switchPlayers();
 				}
 			});
-			$.getJSON("map.json", function (obj) {
-				createMap(ctx, obj.width, obj.height, obj.layers[0].data);
-				revealPlayer();
-				renderLevel(ctx);
+			loadImage("renderTilesNew.png", function (img) {
+				wallSpriteSheet = img;
+				$.getJSON("map.json", function (obj) {
+					createMap(ctx, obj.width, obj.height, obj.layers[0].data);
+					revealPlayer();
+					renderLevel(ctx);
+				});
 			});
+
+			function updateTimer() {
+				setTimeout(updateTimer, 10);
+				if (startTime === null)	return;
+				var timeDiff = Math.abs((new Date()).getTime() - startTime.getTime());
+				$("#timer")[0].innerText = moment().hours(0).minutes(0).seconds(0).milliseconds(timeDiff).format("mm:ss:SSS");
+			}
+			updateTimer();
 		});
 	</script>
 </body>
